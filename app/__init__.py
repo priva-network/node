@@ -14,9 +14,9 @@ def create_app(config=DevelopmentConfig):
 
     redis_storage.init_config(config)
 
-    wallet.init_config(config)
-    node_registry.init_config(config)
+    # wallet.init_config(config)
+    # node_registry.init_config(config)
 
-    node_registry.initialize_node('TODO_IP_ADDRESS', wallet)
+    # node_registry.initialize_node('TODO_IP_ADDRESS', wallet)
 
     return app

@@ -64,4 +64,10 @@ def create_completion(request: CompletionRequest):
         stream=True,
     )
 
+    for output in generator:
+        print(output)
+        prompt = output.prompt
+        generated_text = output.outputs[0].text
+        print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
+
     return generator
