@@ -1,28 +1,40 @@
-from flask import Blueprint, request, jsonify
+from fastapi import APIRouter, Request, Response
+from fastapi.responses import StreamingResponse
+from .models import CompletionRequest, ChatCompletionRequest
 from .services import (
     setup_model_if_not_running,
-    create_chat_completion,
-    create_completion
+    create_completion,
 )
+import json
 
-inference_bp = Blueprint('inference', __name__)
+inference_router = APIRouter()
 
-@inference_bp.route('/v1/completions', methods=['POST'])
-def completions():
-    data = request.json
-    model = data.get('model', None)
+@inference_router.post('/v1/completions')
+async def completions(request: CompletionRequest, raw_request: Request):
+    model = request.model
     if model is None:
-        return jsonify({'error': 'model is required'}), 400
+        return Response(status_code=400, content='{"error": "model is required"}')
     
     setup_model_if_not_running(model)
-    return create_completion(request)
 
-@inference_bp.route('/v1/chat/completions', methods=['POST'])
-def completions_chat():
-    data = request.json
-    model = data.get('model', None)
+    generator = create_completion(request)
+
+    async def stream_response():
+        async for request_output in generator:
+            prompt = request_output.prompt
+            text_outputs = [
+                prompt + output.text for output in request_output.outputs
+            ]
+            ret = {"text": text_outputs}
+            yield (json.dumps(ret) + "\0").encode("utf-8")
+
+    return StreamingResponse(stream_response(), media_type="text/plain", headers={"Transfer-Encoding": "chunked"})
+
+@inference_router.post('/v1/chat/completions')
+async def completions_chat(request: ChatCompletionRequest, raw_request: Request):
+    model = request.model
     if model is None:
-        return jsonify({'error': 'model is required'}), 400
+        return Response(status_code=400, content='{"error": "model is required"}')
     
     setup_model_if_not_running(model)
-    return create_chat_completion(request)
+    return Response(status_code=200, content='{"success": true}')

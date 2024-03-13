@@ -4,8 +4,8 @@ class RedisStorage:
     def __init__(self):
         self.client = None
 
-    def init_app(self, app):
-        redis_url = app.config['REDIS_URL']
+    def init_config(self, config):
+        redis_url = config.REDIS_URL
         if not redis_url:
             raise ValueError('Redis URL is not set')
         self.client = Redis.from_url(redis_url)

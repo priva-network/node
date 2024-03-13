@@ -8,13 +8,13 @@ class NodeRegistry:
         self.contract = None
         self.node_id = None
 
-    def init_app(self, app):
-        network_url = app.config['ETHEREUM_NETWORK_URL']
+    def init_config(self, config):
+        network_url = config.ETHEREUM_NETWORK_URL
         self.w3 = Web3(Web3.HTTPProvider(network_url))
         
         # Load contract
-        contract_address = app.config['NODE_REGISTRY_CONTRACT_ADDRESS']
-        with open(app.config['NODE_REGISTRY_CONTRACT_ABI_PATH']) as abi_file:
+        contract_address = config.NODE_REGISTRY_CONTRACT_ADDRESS
+        with open(config.NODE_REGISTRY_CONTRACT_ABI_PATH) as abi_file:
             contract_abi = json.load(abi_file)
         self.contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
 

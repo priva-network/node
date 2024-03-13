@@ -1,17 +1,17 @@
-from flask import Blueprint, request, jsonify
+from fastapi import APIRouter
 from .models import NodeStatus
 from app.chain.node_registry import node_registry
 
-management_bp = Blueprint('management', __name__)
+management_router = APIRouter()
 
-@management_bp.route('/ping', methods=['GET'])
+@management_router.get('/ping')
 def ping():
-    return jsonify('pong')
+    return "pong"
 
-@management_bp.route('/v1/status', methods=['GET'])
+@management_router.get('/v1/status')
 def status():
     node_status: NodeStatus = {
         'id': node_registry.node_id,
         'supported_models': ['mistral-7b'],
     }
-    return jsonify(node_status)
+    return node_status

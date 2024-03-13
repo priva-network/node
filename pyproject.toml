@@ -7,14 +7,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-Flask = "^3.0.2"
 redis = "^5.0.3"
 web3 = "^6.15.1"
-packaging = "^24.0"
-torch = "2.1.2"
-psutil = "^5.9.8"
-outlines = "0.0.36"
-
+fastapi = "^0.110.0"
+uvicorn = "^0.28.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -12,9 +12,9 @@ class Wallet:
 
         self.config_filepath = None
 
-    def init_app(self, app):
-        self.w3 = Web3(Web3.HTTPProvider(app.config['ETHEREUM_NETWORK_URL']))
-        self.config_filepath = os.path.join(app.config['DATA_BASE_DIR'], 'wallet.json')
+    def init_config(self, config):
+        self.w3 = Web3(Web3.HTTPProvider(config.ETHEREUM_NETWORK_URL))
+        self.config_filepath = os.path.join(config.DATA_BASE_DIR, 'wallet.json')
 
         self.load_or_create_account(self.config_filepath)
 

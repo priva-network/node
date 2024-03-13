@@ -1,22 +1,21 @@
-from flask import Flask
+from fastapi import FastAPI
 from .storage import redis_storage
 from .chain import node_registry, wallet
 from config import DevelopmentConfig
 
 
 def create_app(config=DevelopmentConfig):
-    app = Flask(__name__)
-    app.config.from_object(config)
+    app = FastAPI()
 
-    from app.management.routes import management_bp
-    app.register_blueprint(management_bp)
-    from app.inference.routes import inference_bp
-    app.register_blueprint(inference_bp)
+    from app.management.routes import management_router
+    app.include_router(management_router)
+    from app.inference.routes import inference_router
+    app.include_router(inference_router)
 
-    redis_storage.init_app(app)
+    redis_storage.init_config(config)
 
-    wallet.init_app(app)
-    node_registry.init_app(app)
+    wallet.init_config(config)
+    node_registry.init_config(config)
 
     node_registry.initialize_node('TODO_IP_ADDRESS', wallet)
 
