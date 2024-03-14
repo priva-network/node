@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field, model_validator
 
 import torch
 
-
 class ChatCompletionRequest(BaseModel):
     model: str
     messages: List[Dict[str, str]]
@@ -20,24 +19,14 @@ class ChatCompletionRequest(BaseModel):
     frequency_penalty: Optional[float] = 0.0
     logit_bias: Optional[Dict[str, float]] = None
     user: Optional[str] = None
-    # Additional parameters supported by vLLM
-    best_of: Optional[int] = None
-    top_k: Optional[int] = -1
-    ignore_eos: Optional[bool] = False
-    use_beam_search: Optional[bool] = False
-    early_stopping: Optional[bool] = False
-    stop_token_ids: Optional[List[int]] = Field(default_factory=list)
-    skip_special_tokens: Optional[bool] = True
-    spaces_between_special_tokens: Optional[bool] = True
-    add_generation_prompt: Optional[bool] = True
-    echo: Optional[bool] = False
-    repetition_penalty: Optional[float] = 1.0
-    min_p: Optional[float] = 0.0
-    include_stop_str_in_output: Optional[bool] = False
-    length_penalty: Optional[float] = 1.0
-    guided_json: Optional[Union[str, dict, BaseModel]] = None
-    guided_regex: Optional[str] = None
-    guided_choice: Optional[List[str]] = None
+
+    def to_generate_params(self):
+        # Designed to work with transformers.AutoModel.generate()
+        return {
+            "max_new_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+        }
 
     def to_sampling_params(self):
         if self.logprobs and not self.top_logprobs:
@@ -57,59 +46,32 @@ class ChatCompletionRequest(BaseModel):
 
             logits_processors = [logit_bias_logits_processor]
 
-        if torch.cuda.is_available():
-            from vllm import SamplingParams
-            return SamplingParams(
-                n=self.n,
-                presence_penalty=self.presence_penalty,
-                frequency_penalty=self.frequency_penalty,
-                repetition_penalty=self.repetition_penalty,
-                temperature=self.temperature,
-                top_p=self.top_p,
-                min_p=self.min_p,
-                seed=self.seed,
-                stop=self.stop,
-                stop_token_ids=self.stop_token_ids,
-                max_tokens=self.max_tokens,
-                logprobs=self.top_logprobs if self.logprobs else None,
-                prompt_logprobs=self.top_logprobs if self.echo else None,
-                best_of=self.best_of,
-                top_k=self.top_k,
-                ignore_eos=self.ignore_eos,
-                use_beam_search=self.use_beam_search,
-                early_stopping=self.early_stopping,
-                skip_special_tokens=self.skip_special_tokens,
-                spaces_between_special_tokens=self.spaces_between_special_tokens,
-                include_stop_str_in_output=self.include_stop_str_in_output,
-                length_penalty=self.length_penalty,
-                logits_processors=logits_processors,
-            )
-        else:
-            return {
-                "n": self.n,
-                "presence_penalty": self.presence_penalty,
-                "frequency_penalty": self.frequency_penalty,
-                "repetition_penalty": self.repetition_penalty,
-                "temperature": self.temperature,
-                "top_p": self.top_p,
-                "min_p": self.min_p,
-                "seed": self.seed,
-                "stop": self.stop,
-                "stop_token_ids": self.stop_token_ids,
-                "max_tokens": self.max_tokens,
-                "logprobs": self.top_logprobs if self.logprobs else None,
-                "prompt_logprobs": self.top_logprobs if self.echo else None,
-                "best_of": self.best_of,
-                "top_k": self.top_k,
-                "ignore_eos": self.ignore_eos,
-                "use_beam_search": self.use_beam_search,
-                "early_stopping": self.early_stopping,
-                "skip_special_tokens": self.skip_special_tokens,
-                "spaces_between_special_tokens": self.spaces_between_special_tokens,
-                "include_stop_str_in_output": self.include_stop_str_in_output,
-                "length_penalty": self.length_penalty,
-                "logits_processors": logits_processors,
-            }
+        
+        return {
+            "n": self.n,
+            "presence_penalty": self.presence_penalty,
+            "frequency_penalty": self.frequency_penalty,
+            "repetition_penalty": self.repetition_penalty,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "min_p": self.min_p,
+            "seed": self.seed,
+            "stop": self.stop,
+            "stop_token_ids": self.stop_token_ids,
+            "max_tokens": self.max_tokens,
+            "logprobs": self.top_logprobs if self.logprobs else None,
+            "prompt_logprobs": self.top_logprobs if self.echo else None,
+            "best_of": self.best_of,
+            "top_k": self.top_k,
+            "ignore_eos": self.ignore_eos,
+            "use_beam_search": self.use_beam_search,
+            "early_stopping": self.early_stopping,
+            "skip_special_tokens": self.skip_special_tokens,
+            "spaces_between_special_tokens": self.spaces_between_special_tokens,
+            "include_stop_str_in_output": self.include_stop_str_in_output,
+            "length_penalty": self.length_penalty,
+            "logits_processors": logits_processors,
+        }
 
     @model_validator(mode="before")
     @classmethod
@@ -144,23 +106,18 @@ class CompletionRequest(BaseModel):
     best_of: Optional[int] = None
     logit_bias: Optional[Dict[str, float]] = None
     user: Optional[str] = None
-    # Additional parameters supported by vLLM
-    top_k: Optional[int] = -1
-    ignore_eos: Optional[bool] = False
-    use_beam_search: Optional[bool] = False
-    early_stopping: Optional[bool] = False
-    stop_token_ids: Optional[List[int]] = Field(default_factory=list)
-    skip_special_tokens: Optional[bool] = True
-    spaces_between_special_tokens: Optional[bool] = True
-    repetition_penalty: Optional[float] = 1.0
-    min_p: Optional[float] = 0.0
-    include_stop_str_in_output: Optional[bool] = False
-    length_penalty: Optional[float] = 1.0
-    guided_json: Optional[Union[str, dict, BaseModel]] = None
-    guided_regex: Optional[str] = None
-    guided_choice: Optional[List[str]] = None
+
+    def to_generate_params(self):
+        # Designed to work with transformers.AutoModel.generate()
+        return {
+            "max_new_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "do_sample": self.temperature != 1.0,
+            "top_p": self.top_p,
+        }
 
     def to_sampling_params(self):
+        # Designed to work with vLLM
         echo_without_generation = self.echo and self.max_tokens == 0
 
         logits_processors = None
@@ -177,59 +134,31 @@ class CompletionRequest(BaseModel):
 
             logits_processors = [logit_bias_logits_processor]
 
-        if torch.cuda.is_available():
-            from vllm import SamplingParams
-            return SamplingParams(
-                n=self.n,
-                best_of=self.best_of,
-                presence_penalty=self.presence_penalty,
-                frequency_penalty=self.frequency_penalty,
-                repetition_penalty=self.repetition_penalty,
-                temperature=self.temperature,
-                top_p=self.top_p,
-                top_k=self.top_k,
-                min_p=self.min_p,
-                seed=self.seed,
-                stop=self.stop,
-                stop_token_ids=self.stop_token_ids,
-                ignore_eos=self.ignore_eos,
-                max_tokens=self.max_tokens if not echo_without_generation else 1,
-                logprobs=self.logprobs,
-                use_beam_search=self.use_beam_search,
-                early_stopping=self.early_stopping,
-                prompt_logprobs=self.logprobs if self.echo else None,
-                skip_special_tokens=self.skip_special_tokens,
-                spaces_between_special_tokens=(self.spaces_between_special_tokens),
-                include_stop_str_in_output=self.include_stop_str_in_output,
-                length_penalty=self.length_penalty,
-                logits_processors=logits_processors,
-            )
-        else:
-            return {
-                "n": self.n,
-                "best_of": self.best_of,
-                "presence_penalty": self.presence_penalty,
-                "frequency_penalty": self.frequency_penalty,
-                "repetition_penalty": self.repetition_penalty,
-                "temperature": self.temperature,
-                "top_p": self.top_p,
-                "top_k": self.top_k,
-                "min_p": self.min_p,
-                "seed": self.seed,
-                "stop": self.stop,
-                "stop_token_ids": self.stop_token_ids,
-                "ignore_eos": self.ignore_eos,
-                "max_tokens": self.max_tokens if not echo_without_generation else 1,
-                "logprobs": self.logprobs,
-                "use_beam_search": self.use_beam_search,
-                "early_stopping": self.early_stopping,
-                "prompt_logprobs": self.logprobs if self.echo else None,
-                "skip_special_tokens": self.skip_special_tokens,
-                "spaces_between_special_tokens": (self.spaces_between_special_tokens),
-                "include_stop_str_in_output": self.include_stop_str_in_output,
-                "length_penalty": self.length_penalty,
-                "logits_processors": logits_processors,
-            }
+        return {
+            "n": self.n,
+            "best_of": self.best_of,
+            "presence_penalty": self.presence_penalty,
+            "frequency_penalty": self.frequency_penalty,
+            "repetition_penalty": self.repetition_penalty,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "min_p": self.min_p,
+            "seed": self.seed,
+            "stop": self.stop,
+            "stop_token_ids": self.stop_token_ids,
+            "ignore_eos": self.ignore_eos,
+            "max_tokens": self.max_tokens if not echo_without_generation else 1,
+            "logprobs": self.logprobs,
+            "use_beam_search": self.use_beam_search,
+            "early_stopping": self.early_stopping,
+            "prompt_logprobs": self.logprobs if self.echo else None,
+            "skip_special_tokens": self.skip_special_tokens,
+            "spaces_between_special_tokens": (self.spaces_between_special_tokens),
+            "include_stop_str_in_output": self.include_stop_str_in_output,
+            "length_penalty": self.length_penalty,
+            "logits_processors": logits_processors,
+        }
 
     @model_validator(mode="before")
     @classmethod

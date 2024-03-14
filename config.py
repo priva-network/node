@@ -1,10 +1,10 @@
-import sys
 from pathlib import Path
 from web3 import Web3
 
 class Config:
     """Base config."""
     DATA_BASE_DIR = str(Path.home() / '.cortex/')
+    DATABASE_FILE_PATH = str(Path.home() / '.cortex/data')
 
     LOGGING_CONFIG = {
         'version': 1,
@@ -19,23 +19,32 @@ class Config:
         },
     }
 
+    USD_COST_PER_1000_TOKENS = {
+        'default': 0.01,
+        'mistral-7b': 0.02,
+    }
+
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
+    DATA_BASE_DIR = str(Path.home() / '.cortex/prod/')
+    DATABASE_FILE_PATH = str(Path.home() / '.cortex/prod/data')
 
-    REDIS_URL = 'redis://localhost:6379/0'
+    CACHE_MAX_SIZE = 1000
+    CACHE_DEFAULT_TTL = 60 * 5 # 5 minutes
 
-    ETHEREUM_NETWORK_URL = 'https://mainnet.infura.io/v3/your_infura_key'
-    NODE_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x5FbDB2315678afecb367f032d93F642f64180aa3')
+    ETHEREUM_NETWORK_URL = 'https://sepolia.base.org'
+    NODE_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x98e61B44D85C866bd040d733479A1431555dC6FE')
     NODE_REGISTRY_CONTRACT_ABI_PATH = 'app/chain/abis/NodeRegistry.json'
-    SESSION_MANAGER_CONTRACT_ADDRESS = Web3.to_checksum_address('0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512')
+    SESSION_MANAGER_CONTRACT_ADDRESS = Web3.to_checksum_address('0x9e975b6E3e72FDD91Edfa71183B4a38997eFc560')
     SESSION_MANAGER_CONTRACT_ABI_PATH = 'app/chain/abis/SessionManager.json'
 
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
 
-    REDIS_URL = 'redis://localhost:6379/0'
+    CACHE_MAX_SIZE = 1000
+    CACHE_DEFAULT_TTL = 60 * 5 # 5 minutes
 
     ETHEREUM_NETWORK_URL = 'http://127.0.0.1:8545'
     NODE_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x5FbDB2315678afecb367f032d93F642f64180aa3')

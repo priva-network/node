@@ -1,20 +1,43 @@
-from redis import Redis
+from cachetools import TTLCache
+import shelve
 
-class RedisStorage:
+class CacheStorage:
     def __init__(self):
-        self.client = None
+        self.cache = None
 
     def init_config(self, config):
-        redis_url = config.REDIS_URL
-        if not redis_url:
-            raise ValueError('Redis URL is not set')
-        self.client = Redis.from_url(redis_url)
-
-    def set(self, key, value):
-        self.client.set(key, value)
+        self.cache = TTLCache(maxsize=config.CACHE_MAX_SIZE, ttl=config.CACHE_DEFAULT_TTL)
 
     def get(self, key):
-        return self.client.get(key)
+        return self.cache.get(key)
+    
+    def set(self, key, value):
+        self.cache[key] = value
 
-# Create a global instance of RedisStorage
-redis_storage = RedisStorage()
+class PersistentStorage:
+    def __init__(self):
+        self.db_file_path = None
+        # internal cache for faster access
+        self._cache = None
+
+    def init_config(self, config):
+        self.db_file_path = config.DATABASE_FILE_PATH
+        self._cache = TTLCache(maxsize=config.CACHE_MAX_SIZE, ttl=config.CACHE_DEFAULT_TTL)
+
+    def get(self, key):
+        if key in self._cache:
+            return self._cache[key]
+        
+        with shelve.open(self.db_file_path) as db:
+            value = db.get(key)
+            self._cache[key] = value
+            return value
+
+    def set(self, key, value):
+        with shelve.open(self.db_file_path) as db:
+            db[key] = value
+        self._cache[key] = value
+
+# Create a global instances of the storage classes
+cache_storage = CacheStorage()
+persistent_storage = PersistentStorage()

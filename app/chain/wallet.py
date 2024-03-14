@@ -1,4 +1,6 @@
 from web3 import Web3
+from eth_abi import encode
+from eth_account.messages import encode_defunct
 import logging
 import json
 import os
@@ -42,6 +44,17 @@ class Wallet:
                 json.dump({'address': self.address, 'private_key': self.private_key}, file)
 
             logging.info(f"Created account with address: {self.address}")
+
+    def sign_close_message(self, session_id, amount_paid_wei) -> bytes:
+        encoded_message = encode(['uint256', 'uint256'], [session_id, amount_paid_wei])
+        message_hash = Web3.keccak(encoded_message)
+        message = encode_defunct(primitive=message_hash)
+        signed_message = self.w3.eth.account.sign_message(message, private_key=self.private_key)
+
+        signature = signed_message.signature.hex()
+        signature_bytes = Web3.to_bytes(hexstr=signed_message.signature.hex())
+
+        return signature, signature_bytes
 
 # Global instance of the Wallet
 wallet = Wallet()
