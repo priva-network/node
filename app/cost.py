@@ -1,5 +1,6 @@
 import requests
 from cachetools import cached, TTLCache
+import logging
 
 ONE_ETH_IN_WEI = 10**18
 
@@ -15,7 +16,7 @@ def get_usd_to_eth_conversion_rate():
         eth_price_in_usd = data['ethereum']['usd']
         return eth_price_in_usd
     except requests.RequestException as e:
-        print(f"Error fetching data from CoinGecko: {e}")
+        logging.error(f"Failed to get ETH to USD conversion rate: {e}")
         return None
 
 class CostCalculator:
@@ -24,6 +25,14 @@ class CostCalculator:
 
     def init_config(self, config):
         self.usd_cost_per_1000_tokens_map = config.USD_COST_PER_1000_TOKENS
+
+    def get_cost_per_1000_tokens(self, model=None):
+        if model is None:
+            return self.usd_cost_per_1000_tokens_map.get('default')
+        return self.usd_cost_per_1000_tokens_map.get(model)
+    
+    def get_full_cost_map(self):
+        return self.usd_cost_per_1000_tokens_map
 
     def calculate_cost(self, tokens_used, model=None, currency="USD"):
         if tokens_used is None or tokens_used <= 0:

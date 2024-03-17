@@ -9,3 +9,8 @@ class SessionDetails:
     node_id: int
     is_active: bool
     amount_paid: int
+
+@dataclass
+class ModelDetails:
+    name: str
+    ipfs_hash: str

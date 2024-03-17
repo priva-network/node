@@ -4,7 +4,10 @@ from .models import CompletionRequest, ChatCompletionRequest
 from .services import (
     setup_model_if_not_running,
     create_completion,
-    create_chat_completion
+    create_chat_completion,
+    is_model_downloaded,
+    is_model_loaded,
+    get_supported_models
 )
 from app.management.utils import increment_session_tokens_used, get_session_tokens_used
 from app.chain.utils import get_session_details
@@ -40,7 +43,7 @@ def _is_valid_session(session_id, request_max_tokens=None):
     return True
 
 @inference_router.post('/v1/completions')
-def completions(request: CompletionRequest, raw_request: Request):
+async def completions(request: CompletionRequest, raw_request: Request):
     session_id = raw_request.query_params.get('session_id')
     if session_id is None:
         return Response(status_code=400, content='{"error": "session_id is required"}')
@@ -50,14 +53,16 @@ def completions(request: CompletionRequest, raw_request: Request):
     except ValueError:
         return "session_id must be an integer", 400
 
-    model = request.model
+    model = request.model.lower()
     if model is None:
         return Response(status_code=400, content='{"error": "model is required"}')
+    if model not in get_supported_models():
+        return Response(status_code=400, content='{"error": "model is not supported"}')
     
     if not _is_valid_session(session_id):
         return Response(status_code=400, content='{"error": "session_id is invalid"}')
     
-    setup_model_if_not_running(model)
+    await setup_model_if_not_running(model)
 
     result, tokenizer, num_input_tokens, num_output_tokens = create_completion(request)
 
@@ -153,14 +158,16 @@ async def completions_chat(request: ChatCompletionRequest, raw_request: Request)
     except ValueError:
         return "session_id must be an integer", 400
 
-    model = request.model
+    model = request.model.lower()
     if model is None:
         return Response(status_code=400, content='{"error": "model is required"}')
+    if model not in get_supported_models():
+        return Response(status_code=400, content='{"error": "model is not supported"}')
 
     if not _is_valid_session(session_id):
         return Response(status_code=400, content='{"error": "session_id is invalid"}')
     
-    setup_model_if_not_running(model)
+    await setup_model_if_not_running(model)
     
     result, tokenizer, num_input_tokens, num_output_tokens = create_chat_completion(request)
 

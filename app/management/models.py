@@ -4,8 +4,11 @@ from typing import List
 @dataclass
 class NodeStatus:
     id: int
-    supported_models: List[str]
     has_capacity: bool = True
+    costs_per_1000_tokens: dict = None
+    models_supported: List[str] = None
+    models_running: List[str] = None
+    models_downloaded: List[str] = None
     # TODO: Add more fields here
 
 @dataclass

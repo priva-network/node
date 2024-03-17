@@ -8,4 +8,5 @@ if os.environ.get('CORTEX_ENV') == 'production':
     cfg = ProductionConfig
 
 logging.config.dictConfig(cfg.LOGGING_CONFIG)
+
 app = create_app(cfg)

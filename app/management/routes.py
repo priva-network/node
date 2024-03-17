@@ -4,6 +4,7 @@ from app.chain.wallet import wallet
 from app.chain.node_registry import node_registry
 from .utils import get_session_tokens_used
 from app.cost import cost_calculator
+from app.models.storage import model_storage
 
 management_router = APIRouter()
 
@@ -14,8 +15,10 @@ def ping():
 @management_router.get('/v1/status')
 def status():
     node_status: NodeStatus = {
-        'id': node_registry.node_id,
-        'supported_models': ['mistral-7b'],
+        'node_id': node_registry.node_id,
+        'supported_models': model_storage.get_supported_models(),
+        'has_capacity': True,
+        'costs_per_1000_tokens': cost_calculator.get_full_cost_map(),
     }
     return node_status
 

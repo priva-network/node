@@ -6,24 +6,36 @@ from transformers import (
 from .models import CompletionRequest, ChatCompletionRequest
 from threading import Thread
 import logging
+from app.models.storage import model_storage
 
 current_model_name = None
 tokenizer = None
 model = None
 
-def setup_model_if_not_running(model_name: str):
+def get_supported_models():
+    return model_storage.get_supported_models()
+
+async def is_model_loaded(model_name: str) -> bool:
+    return model_name == current_model_name
+
+async def is_model_downloaded(model_name: str) -> bool:
+    return await model_storage.is_model_downloaded(model_name)
+
+async def setup_model_if_not_running(model_name: str):
     global tokenizer, model, current_model_name
+
+    model_path = await model_storage.get_model_dir(model_name)
 
     if model is None:
         logging.debug(f"No model loaded, loading {model_name}...")
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = AutoModelForCausalLM.from_pretrained(model_path)
         current_model_name = model_name
         logging.debug(f"Model loaded: {model_name}")
     elif model_name != current_model_name:
         logging.debug(f"Model changed, loading {model_name}...")
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = AutoModelForCausalLM.from_pretrained(model_path)
         current_model_name = model_name
         logging.debug(f"Model loaded: {model_name}")
     else:
