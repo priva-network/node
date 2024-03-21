@@ -52,17 +52,23 @@ class CostCalculator:
             return usd_cost
         
         if currency == "ETH":
-            eth_to_usd_rate = get_usd_to_eth_conversion_rate()
-            if eth_to_usd_rate is not None:
-                return usd_cost / eth_to_usd_rate
-            return None
+            return self.convert_to_eth(usd_cost)
         
         if currency == "ETH_WEI":
-            eth_to_usd_rate = get_usd_to_eth_conversion_rate()
-            if eth_to_usd_rate is not None:
-                eth_cost = usd_cost / eth_to_usd_rate
-                return int(eth_cost * ONE_ETH_IN_WEI)
-            return None
+            return self.convert_to_wei(usd_cost)
+        
+    def convert_to_eth(self, usd_cost):
+        eth_to_usd_rate = get_usd_to_eth_conversion_rate()
+        if eth_to_usd_rate is not None:
+            return usd_cost / eth_to_usd_rate
+        return None
+    
+    def convert_to_wei(self, usd_cost):
+        eth_to_usd_rate = get_usd_to_eth_conversion_rate()
+        if eth_to_usd_rate is not None:
+            eth_cost = usd_cost / eth_to_usd_rate
+            return int(eth_cost * ONE_ETH_IN_WEI)
+        return None
 
     
 # Create a global instance of the cost calculator

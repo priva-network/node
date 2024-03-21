@@ -26,21 +26,35 @@ async def setup_model_if_not_running(model_name: str):
 
     model_path = await model_storage.get_model_dir(model_name)
 
-    if model is None:
-        logging.debug(f"No model loaded, loading {model_name}...")
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
-        model = AutoModelForCausalLM.from_pretrained(model_path)
-        current_model_name = model_name
-        logging.debug(f"Model loaded: {model_name}")
-    elif model_name != current_model_name:
-        logging.debug(f"Model changed, loading {model_name}...")
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
-        model = AutoModelForCausalLM.from_pretrained(model_path)
-        current_model_name = model_name
-        logging.debug(f"Model loaded: {model_name}")
-    else:
-        logging.debug(f"Model already loaded: {model_name}")
-
+    try:
+        if model is None:
+            logging.debug(f"No model loaded, loading {model_name} from {model_path}...")
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            if tokenizer.pad_token is None:
+                if tokenizer.eos_token:
+                    tokenizer.pad_token = tokenizer.eos_token
+                else:
+                    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+                    # Make sure to resize model embeddings if you're adding a new token
+                    model.resize_token_embeddings(len(tokenizer))
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                device_map="auto",
+                pad_token_id=0
+            )
+            current_model_name = model_name
+            logging.debug(f"Model loaded: {model_name}")
+        elif model_name != current_model_name:
+            logging.debug(f"Model changed, loading {model_name} from {model_path}...")
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            model = AutoModelForCausalLM.from_pretrained(model_path)
+            current_model_name = model_name
+            logging.debug(f"Model loaded: {model_name}")
+        else:
+            logging.debug(f"Model already loaded: {model_name}")
+    except Exception as e:
+        logging.error(f"Failed to load model: {e}", exc_info=True)
+        raise e
 
 def parse_prompt_format(prompt) -> Tuple[bool, list]:
     # get the prompt, openai supports the following

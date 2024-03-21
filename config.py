@@ -6,6 +6,8 @@ class Config:
     DATA_BASE_DIR = str(Path.home() / '.cortex/')
     DATABASE_FILE_PATH = str(Path.home() / '.cortex/data')
 
+    NODE_IP_ADDRESS = 'http://127.0.0.1:8000'
+
     IPFS_PORT = 5201
     IPFS_CONTAINER_IMAGE = 'ipfs/kubo:latest'
     IPFS_DATA_DIR = str(Path.home() / '.cortex/ipfs')

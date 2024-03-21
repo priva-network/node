@@ -14,6 +14,13 @@ async def lifespan(app: FastAPI):
     await ipfs_node.init_config(selected_config)
     ipfs_client = ipfs_node.get_client()
     model_storage.init(selected_config, ipfs_client)
+
+    # Ensure the supported models are downloaded and available
+    supported_models = model_storage.get_supported_models()
+    for model in supported_models:
+        is_downloaded = await model_storage.is_model_downloaded(model)
+        if not is_downloaded:
+            await model_storage.download_model(model)
     yield
 
 def create_app(config=DevelopmentConfig):
@@ -37,6 +44,6 @@ def create_app(config=DevelopmentConfig):
     session_manager.init_config(config)
     model_registry.init_config(config)
 
-    node_registry.initialize_node('TODO_IP_ADDRESS', wallet)
+    node_registry.initialize_node(config.NODE_IP_ADDRESS, wallet)
 
     return app

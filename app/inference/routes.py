@@ -18,12 +18,12 @@ import uuid
 
 inference_router = APIRouter()
 
-def _is_valid_session(session_id, request_max_tokens=None):
+def _is_valid_session(session_id, request_max_tokens=None) -> str:
     session = get_session_details(session_id)
     if session is None:
-        return False
+        return 'session_id is invalid'
     if not session.is_active:
-        return False
+        return 'session_id is not active'
 
     tokens_used = get_session_tokens_used(session_id)
     if tokens_used is None:
@@ -31,16 +31,17 @@ def _is_valid_session(session_id, request_max_tokens=None):
 
     cost_in_wei = cost_calculator.calculate_cost(tokens_used, currency="ETH_WEI")
     if cost_in_wei is None:
-        return False
+        return 'unable to determine session status'
     
     if cost_in_wei > session.compute_cost_limit:
-        return False
+        return 'session has exceeded its cost limit'
 
-    request_max_cost_in_wei = cost_calculator.calculate_cost(request_max_tokens, currency="ETH_WEI")
-    if request_max_cost_in_wei is not None and cost_in_wei + request_max_cost_in_wei > session.compute_cost_limit:
-        return False
+    if request_max_tokens is not None:
+        request_max_cost_in_wei = cost_calculator.calculate_cost(request_max_tokens, currency="ETH_WEI")
+        if request_max_cost_in_wei is not None and cost_in_wei + request_max_cost_in_wei > session.compute_cost_limit:
+            return 'request would exceed session cost limit'
 
-    return True
+    return None
 
 @inference_router.post('/v1/completions')
 async def completions(request: CompletionRequest, raw_request: Request):
@@ -59,10 +60,14 @@ async def completions(request: CompletionRequest, raw_request: Request):
     if model not in get_supported_models():
         return Response(status_code=400, content='{"error": "model is not supported"}')
     
-    if not _is_valid_session(session_id):
-        return Response(status_code=400, content='{"error": "session_id is invalid"}')
+    session_err_msg = _is_valid_session(session_id, request.max_tokens)
+    if session_err_msg is not None:
+        return Response(status_code=400, content=f'{{"error": "{session_err_msg}"}}')
     
-    await setup_model_if_not_running(model)
+    try:
+        await setup_model_if_not_running(model)
+    except Exception as e:
+        return Response(status_code=500, content=f'{{"error": "Failed to setup model: {e}"}}')
 
     result, tokenizer, num_input_tokens, num_output_tokens = create_completion(request)
 
@@ -96,7 +101,7 @@ async def completions(request: CompletionRequest, raw_request: Request):
             "usage": {
                 "prompt_tokens": num_input_tokens,
                 "completion_tokens": num_output_tokens,
-                "total_tokens": num_input_tokens + num_output_tokens if num_output_tokens is not None else None
+                "total_tokens": num_input_tokens + num_output_tokens if num_output_tokens is not None else None,
             }
         }
         return Response(content=json.dumps(response), media_type="application/json")
@@ -140,7 +145,12 @@ async def completions(request: CompletionRequest, raw_request: Request):
                     "logprobs": None,
                     "text": ""
                 }
-            ]
+            ],
+            "usage": {
+                "prompt_tokens": num_input_tokens,
+                "completion_tokens": num_output_tokens,
+                "total_tokens": num_input_tokens + num_output_tokens if num_output_tokens is not None else None
+            }
         }
         yield json.dumps(final_response) + "\n"
         yield "[DONE]\n"
@@ -164,10 +174,14 @@ async def completions_chat(request: ChatCompletionRequest, raw_request: Request)
     if model not in get_supported_models():
         return Response(status_code=400, content='{"error": "model is not supported"}')
 
-    if not _is_valid_session(session_id):
-        return Response(status_code=400, content='{"error": "session_id is invalid"}')
+    session_err_msg = _is_valid_session(session_id, request.max_tokens)
+    if session_err_msg is not None:
+        return Response(status_code=400, content=f'{{"error": "{session_err_msg}"}}')
     
-    await setup_model_if_not_running(model)
+    try:
+        await setup_model_if_not_running(model)
+    except Exception as e:
+        return Response(status_code=500, content=f'{{"error": "Failed to setup model: {e}"}}')
     
     result, tokenizer, num_input_tokens, num_output_tokens = create_chat_completion(request)
 

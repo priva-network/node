@@ -19,6 +19,7 @@ class NodeRegistry:
         self.contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
 
     def initialize_node(self, ip_address, wallet) -> int:
+        # TODO: I should update the IP address if it's different than what's in the contract
         node_id = self._get_node_id_by_owner(wallet.address)
         if node_id == -1:
             node_id = self._register_node(ip_address, wallet)

@@ -35,7 +35,8 @@ def receipt(request: Request):
         return "session_id must be an integer", 400
     
     tokens_used = get_session_tokens_used(session_id)
-    amount_paid_wei = cost_calculator.calculate_cost(tokens_used, currency="ETH_WEI")
+    amount_paid_usd = cost_calculator.calculate_cost(tokens_used, currency="USD")
+    amount_paid_wei = cost_calculator.convert_to_wei(amount_paid_usd)
 
     signature, _ = wallet.sign_close_message(session_id, amount_paid_wei)
 
@@ -44,6 +45,7 @@ def receipt(request: Request):
         'usage': {
             'tokens': tokens_used,
             'wei': amount_paid_wei,
+            'usd': amount_paid_usd,
         },
         'signature': signature,
     }

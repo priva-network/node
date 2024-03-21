@@ -1,5 +1,6 @@
 import docker
 import aioipfs
+from aiohttp import ClientSession, TCPConnector
 from aioipfs import AsyncIPFS
 import atexit
 import time
@@ -49,10 +50,13 @@ class IPFSNode:
         atexit.register(self.cleanup)
 
         # Connect to the IPFS container
-        self.ipfs_client = aioipfs.AsyncIPFS(maddr="/ip4/0.0.0.0/tcp/5001")
+        self.ipfs_client = aioipfs.AsyncIPFS(
+            maddr="/ip4/0.0.0.0/tcp/5001",
+            debug=True,
+        )
 
         # this is a bootstrap peer that has all the models hosted
-        await self.add_peer("/ip4/54.147.179.22/tcp/4001/ipfs/12D3KooWR2xJJ4Pm1JKFm8PbbHYMmHg8yq72dqKecijEMFK8XMJt")
+        await self.add_peer("/ip4/35.175.177.225/tcp/4001/ipfs/12D3KooWR2xJJ4Pm1JKFm8PbbHYMmHg8yq72dqKecijEMFK8XMJt")
 
     async def add_peer(self, peer_id):
         if self.ipfs_client is None:
