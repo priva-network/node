@@ -1,0 +1,12 @@
+aiohttp==3.9.3
+aioipfs==0.6.6
+cachetools==5.3.3
+docker_py==1.10.6
+eth_abi==5.0.1
+eth_account==0.11.0
+fastapi==0.110.0
+pydantic==2.6.4
+Requests==2.31.0
+tqdm==4.66.2
+transformers==4.38.2
+web3==6.15.1
