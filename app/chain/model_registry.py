@@ -8,6 +8,9 @@ class ModelRegistry:
         self.contract = None
 
     def init_config(self, config):
+        """
+        Initialize Web3 Client and load the contract.
+        """
         network_url = config.ETHEREUM_NETWORK_URL
         self.w3 = Web3(Web3.HTTPProvider(network_url))
         

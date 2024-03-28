@@ -16,6 +16,7 @@ cachetools = "^5.3.3"
 docker = "^7.0.0"
 aioipfs = "^0.6.6"
 tqdm = "^4.66.2"
+cryptography = "^42.0.5"
 
 [build-system]
 requires = ["poetry-core"]

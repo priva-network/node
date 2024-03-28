@@ -107,7 +107,7 @@ class ModelStorage:
             self._download_file_with_stream(url, target_dir, filename)
 
     async def _download_model(self, ipfs_hash: str, target_dir: str) -> str:
-        logging.debug(f"Downloading model from IPFS: {ipfs_hash}")
+        logging.info(f"Downloading model from IPFS Hash: {ipfs_hash}")
         os.makedirs(target_dir, exist_ok=True)
 
         def progress_callback(*args, **kwargs):
@@ -147,7 +147,7 @@ class ModelStorage:
                         file_name = link['Name']
                         file_path = os.path.join(target_dir, file_name)
                         await self.ipfs_client.core.get(file_hash, file_path, progress_callback=progress_callback)
-                        logging.debug(f"Downloaded file {file_name} to {file_path} from IPFS Node")
+                        logging.info(f"Downloaded file {file_name} to {file_path} from IPFS Node")
                         succeeded_files.append(file_name)
                     except Exception as e:
                         logging.error(f"Failed to download file {file_name}: {e}")
@@ -165,7 +165,7 @@ class ModelStorage:
                         file_hash = file['hash']
                         self._download_file_from_gateway(file_hash, target_dir, filename)
                         succeeded_files.append(filename)
-                        logging.debug(f"Downloaded file {filename} to {os.path.join(target_dir, filename)} from IPFS gateway")
+                        logging.info(f"Downloaded file {filename} to {os.path.join(target_dir, filename)} from IPFS gateway")
                     except Exception as e:
                         logging.error(f"Failed to download file {filename} from IPFS gateway: {e}")
                         cleanup_failed_download()
@@ -176,13 +176,13 @@ class ModelStorage:
                 raise Exception("Failed to download any files from IPFS")
 
         # make sure that the files in the ipfs_hash exist in the target_dir
-        logging.debug("Verifying all files were successfully downloaded...")
+        logging.info("Verifying all files were successfully downloaded...")
         for file in ipfs_files:
             if not os.path.exists(os.path.join(target_dir, file)):
                 cleanup_failed_download()
                 raise Exception(f"Failed to download file {file} from IPFS")
 
-        logging.debug("All files successfully downloaded")
+        logging.info("All files successfully downloaded")
 
         return target_dir
 

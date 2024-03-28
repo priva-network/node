@@ -1,6 +1,5 @@
 import docker
 import aioipfs
-from aiohttp import ClientSession, TCPConnector
 from aioipfs import AsyncIPFS
 import atexit
 import time
@@ -31,10 +30,13 @@ class IPFSNode:
                 "8080/tcp": 8080,
                 "5001/tcp": 5001,
             },
+            # run on 0.0.0.0
+            hostname="0.0.0.0",
             volumes={self.ipfs_data_dir: {'bind': '/data/ipfs', 'mode': 'rw'}},
             name="ipfs",
         )
-        # as command line
+        # command line version
+        # docker run -d --name ipfs -p 4001:4001 -p 4001:4001/udp -p 8080:8080 -p 5001:5001 -v ~/.priva/ipfs:/data/ipfs ipfs/kubo:latest
         
         # Wait for the container to start
         # Keep checking until container logs say "Daemon is ready"
@@ -51,14 +53,20 @@ class IPFSNode:
 
         # Connect to the IPFS container
         self.ipfs_client = aioipfs.AsyncIPFS(
-            maddr="/ip4/0.0.0.0/tcp/5001",
+            # maddr="/ip4/0.0.0.0/tcp/5001",
+            host="0.0.0.0",
+            port=5001,
+            scheme="http",
             debug=True,
         )
 
         # this is a bootstrap peer that has all the models hosted
-        await self.add_peer("/ip4/35.175.177.225/tcp/4001/ipfs/12D3KooWR2xJJ4Pm1JKFm8PbbHYMmHg8yq72dqKecijEMFK8XMJt")
+        # note that /p2p/ is the new muliaddr version, and /ipfs/ is the old mulitaddr version
+        await self.add_peer("/ip4/35.175.177.225/tcp/4001/p2p/12D3KooWR2xJJ4Pm1JKFm8PbbHYMmHg8yq72dqKecijEMFK8XMJt")
 
     async def add_peer(self, peer_id):
+        # this is the same as this command line 
+        # docker exec ipfs ipfs swarm connect /ip4/35.175.177.225/tcp/4001/ipfs/12D3KooWR2xJJ4Pm1JKFm8PbbHYMmHg8yq72dqKecijEMFK8XMJt
         if self.ipfs_client is None:
             raise Exception("IPFS client not initialized")
         try:
@@ -66,6 +74,7 @@ class IPFSNode:
             logging.debug(f"Added IPFS peer: {peer_id}")
         except Exception as e:
             logging.error(f"Failed to add IPFS peer: {e}")
+            raise e
 
     def get_client(self) -> AsyncIPFS:
         if self.ipfs_client is None:
@@ -76,6 +85,9 @@ class IPFSNode:
         try:
             self.docker_client.containers.get("ipfs").stop()
             self.docker_client.containers.get("ipfs").remove()
+            if self.ipfs_client is not None:
+                import asyncio
+                asyncio.run(self.ipfs_client.close())
         except:
             pass
 

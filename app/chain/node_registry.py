@@ -9,6 +9,9 @@ class NodeRegistry:
         self.node_id = None
 
     def init_config(self, config):
+        """
+        Initialize Web3 Client and load the contract.
+        """
         network_url = config.ETHEREUM_NETWORK_URL
         self.w3 = Web3(Web3.HTTPProvider(network_url))
         
@@ -19,6 +22,9 @@ class NodeRegistry:
         self.contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
 
     def initialize_node(self, ip_address, wallet) -> int:
+        """
+        Registers compute node if not already registered and sets the node active status.
+        """
         # TODO: I should update the IP address if it's different than what's in the contract
         node_id = self._get_node_id_by_owner(wallet.address)
         if node_id == -1:
