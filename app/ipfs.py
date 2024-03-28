@@ -73,8 +73,7 @@ class IPFSNode:
             await self.ipfs_client.swarm.connect(peer_id)
             logging.debug(f"Added IPFS peer: {peer_id}")
         except Exception as e:
-            logging.error(f"Failed to add IPFS peer: {e}")
-            raise e
+            logging.warning(f"Failed to add IPFS peer. {e}")
 
     def get_client(self) -> AsyncIPFS:
         if self.ipfs_client is None:

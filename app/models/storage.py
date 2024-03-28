@@ -145,9 +145,10 @@ class ModelStorage:
                     try:
                         file_hash = link['Hash']
                         file_name = link['Name']
-                        file_path = os.path.join(target_dir, file_name)
-                        await self.ipfs_client.core.get(file_hash, file_path, progress_callback=progress_callback)
-                        logging.info(f"Downloaded file {file_name} to {file_path} from IPFS Node")
+                        await self.ipfs_client.core.get(file_hash, dstdir=target_dir, progress_callback=progress_callback)
+                        # move it from the subdirectory (/<file_hash>) to the target directory
+                        shutil.move(os.path.join(target_dir, file_hash), os.path.join(target_dir, file_name))
+                        logging.info(f"Downloaded file {file_name} to {target_dir} from IPFS Node")
                         succeeded_files.append(file_name)
                     except Exception as e:
                         logging.error(f"Failed to download file {file_name}: {e}")
@@ -228,7 +229,7 @@ class ModelStorage:
             if os.path.exists(os.path.join(model_dir, "config.json")):
                 return True
             else:
-                logging.warning(f"Model directory {model_dir} does not contain a config.json file. Redownloading the model.")
+                logging.debug(f"Model directory {model_dir} does not contain a config.json file. Redownloading the model.")
                 shutil.rmtree(model_dir)
         return False
     

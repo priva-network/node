@@ -33,8 +33,8 @@ class Config:
     }
 
     SUPPORTED_MODELS = [
-        # 'mistralai/mistral-7b-v0.1',
-        # 'tinyllama/tinyllama-1.1b-chat-v1.0',
+        'mistralai/mistral-7b-v0.1',
+        'tinyllama/tinyllama-1.1b-chat-v1.0',
     ]
 
     USD_COST_PER_1000_TOKENS = {
