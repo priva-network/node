@@ -1,7 +1,7 @@
 aiohttp==3.9.3
 aioipfs==0.6.6
 cachetools==5.3.3
-docker_py==1.10.6
+docker==7.0.0
 eth_abi==5.0.1
 eth_account==0.11.0
 fastapi==0.110.0
@@ -11,4 +11,4 @@ tqdm==4.66.2
 transformers==4.38.2
 web3==6.15.1
 uvicorn==0.29.0
-colorama
+colorama==0.4.6

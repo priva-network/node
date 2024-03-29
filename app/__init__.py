@@ -66,6 +66,11 @@ def create_app(config):
     wallet.init_config(config)
     priva_api.init_config(config)
 
+    if not is_node_setup_complete(wallet, config):
+        from colorama import Fore, Style
+        print(f"{Fore.RED}Node setup is not complete. Please run the setup command first.{Style.RESET_ALL}")
+        exit(1)
+
     # Try to get password from env variable
     wallet_password = os.getenv("WALLET_PASSWORD")
     if wallet_password is not None:
@@ -76,10 +81,6 @@ def create_app(config):
         wallet_password = getpass("Enter your password to decrypt the wallet: ")
         wallet_private_key = wallet.load_private_key_from_file(wallet_password)
         wallet.setup_account_with_private_key(wallet_private_key)
-
-    if not is_node_setup_complete(wallet, config):
-        from colorama import Fore, Style
-        print(f"{Fore.RED}Node setup is not complete. Please run the setup command first.{Style.RESET_ALL}")
 
     node_registry.init_config(config)
     session_manager.init_config(config)
