@@ -7,6 +7,7 @@ from .models import model_storage
 from .setup import prompt_user_for_node_setup, is_node_setup_complete
 from config import get_config
 from contextlib import asynccontextmanager
+from .http import priva_api
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +27,7 @@ async def setup_app(config):
         config = get_config()
 
     wallet.init_config(config)
+    priva_api.init_config(config)
     prompt_user_for_node_setup(wallet, config)
 
     model_registry.init_config(config)
@@ -62,6 +64,7 @@ def create_app(config):
     cost_calculator.init_config(config)
 
     wallet.init_config(config)
+    priva_api.init_config(config)
 
     # Try to get password from env variable
     wallet_password = os.getenv("WALLET_PASSWORD")
@@ -75,7 +78,8 @@ def create_app(config):
         wallet.setup_account_with_private_key(wallet_private_key)
 
     if not is_node_setup_complete(wallet, config):
-        print("Node setup is not complete. Please run the setup command first.")
+        from colorama import Fore, Style
+        print(f"{Fore.RED}Node setup is not complete. Please run the setup command first.{Style.RESET_ALL}")
 
     node_registry.init_config(config)
     session_manager.init_config(config)

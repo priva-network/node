@@ -1,5 +1,6 @@
 from app import create_app, setup_app
 from config import get_config
+from colorama import Fore, Style
 import uvicorn
 import logging.config
 import sys
@@ -49,8 +50,8 @@ if __name__ == "__main__":
             print_logo()
             run()
         else:
-            print(f"Unknown command: {command}\n")
+            print(f"{Fore.RED}Unknown command: {command}{Style.RESET_ALL}")
             print_help()
     else:
-        print("No command provided.\n")
+        print(f"{Fore.RED}No command provided{Style.RESET_ALL}")
         print_help()

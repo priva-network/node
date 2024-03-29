@@ -1,6 +1,8 @@
 from getpass import getpass
 from .chain import Wallet
 from config import Config
+from .http import priva_api
+from colorama import Fore, Style
 
 
 def is_node_setup_complete(
@@ -35,10 +37,12 @@ def prompt_user_for_node_setup(
         try:
             wallet_private_key = wallet.load_private_key_from_file(wallet_password)
         except Exception as e:
-            print("Failed to decrypt the wallet.")
+            print(f"{Fore.RED}Failed to decrypt the wallet{Style.RESET_ALL}")
             print("Exiting...")
             exit(1)
         address, private_key = wallet.setup_account_with_private_key(wallet_private_key)
+        print(f"Wallet Address: {address}")
+        print("")
     else:
         print("New Node Setup.")
         print("")
@@ -56,7 +60,7 @@ def prompt_user_for_node_setup(
             # Reprompt to check password
             wallet_password_confirm = getpass("Re-enter the password to confirm: ")
             if wallet_password != wallet_password_confirm:
-                print("Passwords do not match.")
+                print(f"{Fore.RED}Passwords do not match.{Style.RESET_ALL}")
                 print("Exiting...")
                 exit(1)
         else:
@@ -68,22 +72,60 @@ def prompt_user_for_node_setup(
             # Reprompt to check password
             wallet_password_confirm = getpass("Re-enter the password to confirm: ")
             if wallet_password != wallet_password_confirm:
-                print("Passwords do not match.")
+                print(f"{Fore.RED}Passwords do not match.{Style.RESET_ALL}")
                 print("Exiting...")
                 exit(1)
+            print("")
 
         # Save the private key to a file
         wallet.save_private_key_to_file(wallet_password)
 
     # Should have at least enough ETH to register the node
-    min_eth_required = 0.002 # TODO: should be dynamically determined based on gas prices
+    min_eth_required = 0.001 # TODO: should be dynamically determined based on gas prices
     balance = wallet.get_balance(currency='ether')
+    # convert balance to float
+    balance = float(balance)
     if balance < min_eth_required:
-        # TODO: should be able to request small amount of ETH from Priva Network if give API Key
-        print(f"Your wallet balance is {balance} ETH. Please add more ETH to your wallet.")
-        print(f"Minimum required balance is {min_eth_required} ETH.")
-        print("Exiting...")
-        exit(1)
+        print(f"Wallet Balance: {balance} ETH")
+        print(f"Minimum Balance Required: {min_eth_required} ETH")
+        print(f"{Fore.BLUE}You need at least {min_eth_required} ETH to register your node.{Style.RESET_ALL}")
+        print("")
+
+        print("You can request ETH from the Priva Network if this is a new node.")
+        api_key = getpass("Enter your Priva API Key (privanetwork.xyz/api-keys) to request ETH (or Enter to skip): ")
+
+        if api_key == "":
+            print(f"{Fore.YELLOW}No API Key entered. You can manually fund your wallet by sending ETH to {address}.{Style.RESET_ALL}")
+            print("Exiting...")
+            exit(1)
+
+        try:
+            print(f"Requesting ETH from the Priva Network...")
+            res = priva_api.request_eth(address, api_key)
+            transaction_hash = res.get("transaction_hash")
+            print(f"ETH Requested. Transaction Hash: {transaction_hash}")
+            print("Waiting for transaction to be confirmed...")
+
+            # Wait for the transaction to be confirmed
+            wallet.wait_for_confirmations(transaction_hash)
+            print("Transaction Confirmed.")
+            print("")
+
+            # Check the balance again
+            balance = wallet.get_balance(currency='ether')
+            print(f"New Wallet Balance: {balance}")
+            # convert balance to float
+            balance = float(balance)
+            if balance < min_eth_required:
+                print(f"Minimum ETH Required: {min_eth_required}")
+                print(f"{Fore.RED}You still need at least {min_eth_required} ETH to register your node.{Style.RESET_ALL}")
+                print("Exiting...")
+                exit(1)
+
+        except Exception as e:
+            print(f"{Fore.RED}Failed to request ETH: {e}{Style.RESET_ALL}")
+            print("Exiting...")
+            exit(1)
 
     # Prompt for IP address
     if config.NODE_IP_ADDRESS is not None:
@@ -97,7 +139,7 @@ def prompt_user_for_node_setup(
         ip_address = input("Enter the network address (IP Address, Domain Name) of your Node: ")
 
     if ip_address is None or ip_address == "":
-        print("IP address is required.")
+        print(f"{Fore.RED}IP address is required.{Style.RESET_ALL}")
         print("Exiting...")
         exit(1)
 

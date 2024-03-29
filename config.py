@@ -80,7 +80,10 @@ class ProductionConfig(Config):
 
     DEFAULT_LOGGING_LEVEL = 'INFO'
 
+    PRIVA_API_URL = 'https://api.privanetwork.xyz'
+
     ETHEREUM_NETWORK_URL = 'https://sepolia.base.org'
+    MIN_CONFIRMATIONS = 3
     NODE_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x98e61B44D85C866bd040d733479A1431555dC6FE')
     NODE_REGISTRY_CONTRACT_ABI_PATH = 'app/chain/abis/NodeRegistry.json'
     SESSION_MANAGER_CONTRACT_ADDRESS = Web3.to_checksum_address('0x9e975b6E3e72FDD91Edfa71183B4a38997eFc560')
@@ -99,7 +102,10 @@ class DevelopmentConfig(Config):
     CACHE_MAX_SIZE = 1000
     CACHE_DEFAULT_TTL = 60 * 5 # 5 minutes
 
+    PRIVA_API_BASE_URL = 'http://localhost:5000'
+
     ETHEREUM_NETWORK_URL = 'http://127.0.0.1:8545'
+    MIN_CONFIRMATIONS = 0 # No confirmations needed for local testing
     NODE_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x5FbDB2315678afecb367f032d93F642f64180aa3')
     NODE_REGISTRY_CONTRACT_ABI_PATH = 'app/chain/abis/NodeRegistry.json'
     SESSION_MANAGER_CONTRACT_ADDRESS = Web3.to_checksum_address('0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512')

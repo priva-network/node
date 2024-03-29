@@ -3,6 +3,7 @@ from eth_abi import encode
 from eth_account.messages import encode_defunct
 from app.crypto import encrypt_private_key, decrypt_private_key
 import json
+import time
 import os
 
 class Wallet:
@@ -11,6 +12,7 @@ class Wallet:
         self.address = None
         self.private_key = None
         self.w3 = None
+        self.min_confirmations = 0
 
         self.config_filepath = None
 
@@ -20,9 +22,31 @@ class Wallet:
         """
 
         self.w3 = Web3(Web3.HTTPProvider(config.ETHEREUM_NETWORK_URL))
+        self.min_confirmations = config.MIN_CONFIRMATIONS
         self.config_filepath = os.path.join(config.DATA_BASE_DIR, 'wallet.json')
         # create directories recursively if they don't exist
         os.makedirs(os.path.dirname(self.config_filepath), exist_ok=True)
+
+    def wait_for_confirmations(self, tx_hash, poll_interval=5, timeout=60):
+        """
+        Wait for a transaction to be confirmed on the blockchain.
+        """
+        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=timeout)
+        if tx_receipt is None:
+            return False
+
+        start_time = time.time()
+        while True:
+            print("Polling for confirmation...")
+            current_block = self.w3.eth.block_number
+            confirmations_count = current_block - tx_receipt.blockNumber
+            if confirmations_count >= self.min_confirmations:
+                return True
+            
+            if time.time() - start_time >= timeout:
+                raise TimeoutError("Timeout waiting for confirmations.")
+
+            time.sleep(poll_interval)
 
     def get_address(self):
         return self.address
