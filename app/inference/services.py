@@ -7,6 +7,9 @@ from .models import CompletionRequest, ChatCompletionRequest
 from threading import Thread
 import logging
 from app.models.storage import model_storage
+import torch
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 current_model_name = None
 tokenizer = None
@@ -43,12 +46,25 @@ async def setup_model_if_not_running(model_name: str):
                 pad_token_id=0
             )
             current_model_name = model_name
+            model.to(device)
             logging.debug(f"Model loaded: {model_name}")
         elif model_name != current_model_name:
             logging.debug(f"Model changed, loading {model_name} from {model_path}...")
             tokenizer = AutoTokenizer.from_pretrained(model_path)
-            model = AutoModelForCausalLM.from_pretrained(model_path)
+            if tokenizer.pad_token is None:
+                if tokenizer.eos_token:
+                    tokenizer.pad_token = tokenizer.eos_token
+                else:
+                    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+                    # Make sure to resize model embeddings if you're adding a new token
+                    model.resize_token_embeddings(len(tokenizer))
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                device_map="auto",
+                pad_token_id=0
+            )
             current_model_name = model_name
+            model.to(device)
             logging.debug(f"Model loaded: {model_name}")
         else:
             logging.debug(f"Model already loaded: {model_name}")
@@ -86,7 +102,7 @@ def create_completion(request: CompletionRequest) -> (
     generate_params = request.to_generate_params()
     _, prompts = parse_prompt_format(request.prompt)
 
-    inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True)
+    inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(device)
     num_input_tokens = inputs.input_ids.shape[1]
 
     if request.stream:
@@ -117,7 +133,7 @@ def create_chat_completion(request: ChatCompletionRequest) -> (
     ):
     generate_params = request.to_generate_params()
     
-    tokenized_chat = tokenizer.apply_chat_template(request.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
+    tokenized_chat = tokenizer.apply_chat_template(request.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt").to(device)
     num_input_tokens = tokenized_chat.shape[1]
 
     if request.stream:
