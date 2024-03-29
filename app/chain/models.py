@@ -1,6 +1,12 @@
 from dataclasses import dataclass
 
 @dataclass
+class NodeDetails:
+    id: int
+    ip_address: str
+    owner: str
+
+@dataclass
 class SessionDetails:
     id: int
     start_time: int

@@ -80,13 +80,13 @@ class ProductionConfig(Config):
 
     DEFAULT_LOGGING_LEVEL = 'INFO'
 
-    PRIVA_API_URL = 'https://api.privanetwork.xyz'
+    PRIVA_API_BASE_URL = 'https://api.privanetwork.xyz'
 
     ETHEREUM_NETWORK_URL = 'https://sepolia.base.org'
     MIN_CONFIRMATIONS = 3
-    NODE_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x98e61B44D85C866bd040d733479A1431555dC6FE')
+    NODE_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x2d1e3da7e3f729216731e00b2a112f1587875550')
     NODE_REGISTRY_CONTRACT_ABI_PATH = 'app/chain/abis/NodeRegistry.json'
-    SESSION_MANAGER_CONTRACT_ADDRESS = Web3.to_checksum_address('0x9e975b6E3e72FDD91Edfa71183B4a38997eFc560')
+    SESSION_MANAGER_CONTRACT_ADDRESS = Web3.to_checksum_address('0xA93AE84154f166B64a4C330A284762a96d04CD4a')
     SESSION_MANAGER_CONTRACT_ABI_PATH = 'app/chain/abis/SessionManager.json'
     MODEL_REGISTRY_CONTRACT_ADDRESS = Web3.to_checksum_address('0x9c227cb361C0Cd5DdFeefEe985ad6aA7d83A900c')
     MODEL_REGISTRY_CONTRACT_ABI_PATH = 'app/chain/abis/ModelRegistry.json'

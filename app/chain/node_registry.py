@@ -1,4 +1,5 @@
 from web3 import Web3
+from .models import NodeDetails
 import logging
 import json
 
@@ -25,7 +26,6 @@ class NodeRegistry:
         """
         Registers compute node if not already registered and sets the node active status.
         """
-        # TODO: I should update the IP address if it's different than what's in the contract
         node_id = self._get_node_id_by_owner(wallet.address)
         if node_id == -1:
             node_id = self._register_node(ip_address, wallet)
@@ -33,9 +33,10 @@ class NodeRegistry:
                 raise Exception("Failed to register compute node")
         self.node_id = node_id
 
-        if not self._get_node_active_status(node_id):
-            if not self._set_node_active_status(node_id, True, wallet):
-                raise Exception("Failed to set compute node active status")
+        details = self._get_node_details(node_id)
+        if details.ip_address != ip_address:
+            if not self._set_node_ip_address(node_id, ip_address, wallet):
+                raise Exception("Failed to set compute node IP address")
 
         return node_id
 
@@ -72,12 +73,17 @@ class NodeRegistry:
         else:
             logging.error("Failed to register compute node")
             return -1
-        
-    def _get_node_active_status(self, node_id) -> bool:
-        return self.contract.functions.isNodeActive(node_id).call()
-        
-    def _set_node_active_status(self, node_id, active, wallet):
-        txn = self.contract.functions.setNodeActiveStatus(node_id, active).build_transaction({
+    
+    def _get_node_details(self, node_id) -> NodeDetails:
+        details = self.contract.functions.getNodeDetails(node_id).call()
+        return NodeDetails(
+            id=node_id,
+            ip_address=details[0],
+            owner=details[1]
+        )
+
+    def _set_node_ip_address(self, node_id, ip_address, wallet):
+        txn = self.contract.functions.setNodeIPAddress(node_id, ip_address).build_transaction({
             'chainId': self.w3.eth.chain_id,
             'gas': 2000000,
             'nonce': self.w3.eth.get_transaction_count(wallet.address),
@@ -87,14 +93,14 @@ class NodeRegistry:
         receipt = self.w3.eth.wait_for_transaction_receipt(txn_hash)
 
         if receipt.status != 1:
-            logging.error("Failed to set node active status")
+            logging.error("Failed to set node IP address")
             return False
 
-        node_status_event = self.contract.events.NodeStatusChanged().process_receipt(receipt)
-        if node_status_event:
+        node_ip_address_event = self.contract.events.NodeIPAddressUpdated().process_receipt(receipt)
+        if node_ip_address_event:
             return True
         else:
-            logging.error("Failed to set node active status")
+            logging.error("Failed to set node IP address")
             return False
 
 # Global instance of the ContractService

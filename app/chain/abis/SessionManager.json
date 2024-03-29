@@ -146,7 +146,7 @@
                         "internalType": "bool"
                     },
                     {
-                        "name": "amountPaid",
+                        "name": "amountClaimableByNodeOwner",
                         "type": "uint256",
                         "internalType": "uint256"
                     }
@@ -278,7 +278,7 @@
                 "internalType": "bool"
             },
             {
-                "name": "amountPaid",
+                "name": "amountClaimableByNodeOwner",
                 "type": "uint256",
                 "internalType": "uint256"
             }
@@ -311,7 +311,7 @@
             {
                 "name": "user",
                 "type": "address",
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address"
             },
             {
@@ -321,7 +321,7 @@
                 "internalType": "uint256"
             },
             {
-                "name": "amountPaid",
+                "name": "amountClaimableByNodeOwner",
                 "type": "uint256",
                 "indexed": false,
                 "internalType": "uint256"
@@ -342,7 +342,7 @@
             {
                 "name": "user",
                 "type": "address",
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address"
             },
             {
