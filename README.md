@@ -11,40 +11,43 @@ Before you begin, ensure you have the following installed on your system:
 - Python 3.8 or newer
 - pip (Python package installer)
 
-### Installing
+### Install
 Follow these steps to set up your development environment:
 
 1. Clone the repository:
 ```bash
 git clone https://github.com/priva-network/node.git
 ```
-1. Navigate to the repository directory:
+2. Navigate to the repository directory:
 ```bash
 cd yourrepository
 ```
-1. Install the required packages:
+3. Install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
-1. Install a compatible version of PyTorch:
+4. Install a compatible version of PyTorch:
 Depending on your system (whether you have CUDA installed or not), you may need to install a specific version of PyTorch. Visit the PyTorch installation guide to find the command that matches your environment.
 
-## Running the Application
-To start the application, run the following command:
+### Setup
+To setup the node, run the following command:
+```bash
+python main.py setup
+```
+And follow the instructions outtputed to the console.
+
+## Running the Node
+To run the node, run the following command:
 
 ```bash
-PRIVA_ENV=production uvicorn application:app --host 0.0.0.0
+python main.py run
 ```
 ### Running in the Background
 It's recommended to run the application in the background.
 
-1. Export the environment variable:
+You can do this using nohup. Make sure you have to specify your wallet address in an environment variable:
 ```bash
-export PRIVA_ENV=production
-```
-1. Run the application in the background using nohup:
-```bash
-nohup uvicorn application:app --host 0.0.0.0 &
+WALLET_PASSWORD=YOUR_PASSWORD nohup python main.py run &
 ```
 Logs and any output will be directed to nohup.out.
 
@@ -53,7 +56,7 @@ To stop the background application, follow these steps:
 
 1. Find the process ID (PID):
 ```bash
-ps ax | grep uvicorn
+ps ax | grep main.py
 ```
 1. Terminate the process using its PID:
 ```bash
