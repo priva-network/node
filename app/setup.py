@@ -47,8 +47,10 @@ def prompt_user_for_node_setup(
         print("New Node Setup.")
         print("")
 
+
         # Ask user if they have an existing wallet on Base Testnet
-        existing_wallet = input("Do you have an existing wallet on Base Testnet (https://sepolia.basescan.org/) that you would like to use for your Node? (y/N): ")
+        ETHEREUM_URL_TO_DISPLAY = config.ETHERSCAN_URL if config.ETHERSCAN_URL is not None else config.ETHEREUM_NETWORK_URL
+        existing_wallet = input(f"Do you have an existing wallet on Base Testnet ({ETHEREUM_URL_TO_DISPLAY}) that you would like to use for your Node? (y/N): ")
         if existing_wallet.lower() == "y":
             # Prompt user for the private key of the wallet
             wallet_private_key = getpass("Enter the private key of the wallet: ")
@@ -101,7 +103,7 @@ def prompt_user_for_node_setup(
 
         try:
             print(f"Requesting ETH from the Priva Network...")
-            res = priva_api.request_eth(address, api_key)
+            res = priva_api.request_eth(address, api_key.strip())
             transaction_hash = res.get("transaction_hash")
             print(f"ETH Requested. Transaction Hash: {transaction_hash}")
             print("Waiting for transaction to be confirmed...")

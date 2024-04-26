@@ -11,7 +11,7 @@ class ModelStorage:
         self.model_storage_base_path = None
         self.supported_models = None
 
-        self.ipfs_gateway_url = "https://ipfs.usescholar.org/ipfs"
+        self.ipfs_gateway_url = "https://ipfs.privanetwork.xyz/ipfs"
 
     def init(self, config, ipfs_client: AsyncIPFS):
         self.model_storage_base_path = os.path.join(config.DATA_BASE_DIR, "models")
