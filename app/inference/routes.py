@@ -15,6 +15,7 @@ from app.cost import cost_calculator
 import json
 import time
 import uuid
+from config import Config
 
 inference_router = APIRouter()
 
@@ -45,14 +46,15 @@ def _is_valid_session(session_id, request_max_tokens=None) -> str:
 
 @inference_router.post('/v1/completions')
 async def completions(request: CompletionRequest, raw_request: Request):
-    session_id = raw_request.query_params.get('session_id')
-    if session_id is None:
-        return Response(status_code=400, content='{"error": "session_id is required"}')
-    # convert session_id to int
-    try:
-        session_id = int(session_id)
-    except ValueError:
-        return "session_id must be an integer", 400
+    if not Config.LOCAL_INFERENCE_ENABLED:
+        session_id = raw_request.query_params.get('session_id')
+        if session_id is None:
+            return Response(status_code=400, content='{"error": "session_id is required"}')
+        # convert session_id to int
+        try:
+            session_id = int(session_id)
+        except ValueError:
+            return "session_id must be an integer", 400
 
     model = request.model.lower()
     if model is None:
@@ -60,9 +62,10 @@ async def completions(request: CompletionRequest, raw_request: Request):
     if model not in get_supported_models():
         return Response(status_code=400, content='{"error": "model is not supported"}')
     
-    session_err_msg = _is_valid_session(session_id, request.max_tokens)
-    if session_err_msg is not None:
-        return Response(status_code=400, content=f'{{"error": "{session_err_msg}"}}')
+    if not Config.LOCAL_INFERENCE_ENABLED:
+        session_err_msg = _is_valid_session(session_id, request.max_tokens)
+        if session_err_msg is not None:
+            return Response(status_code=400, content=f'{{"error": "{session_err_msg}"}}')
     
     try:
         await setup_model_if_not_running(model)
@@ -85,7 +88,8 @@ async def completions(request: CompletionRequest, raw_request: Request):
         if not isinstance(result, str):
             return Response(status_code=500, content='{"error": "Internal server error"}')
         
-        increment_session_tokens_used(session_id, num_input_tokens + num_output_tokens)
+        if not Config.LOCAL_INFERENCE_ENABLED:
+            increment_session_tokens_used(session_id, num_input_tokens + num_output_tokens)
 
         response = {
             **response_template,
@@ -133,7 +137,8 @@ async def completions(request: CompletionRequest, raw_request: Request):
             # if echoing, it outputs both input and output tokens,
             # so we need to subtract the input tokens from the total
             num_output_tokens -= num_input_tokens
-        increment_session_tokens_used(session_id, num_input_tokens + num_output_tokens)
+        if not Config.LOCAL_INFERENCE_ENABLED:
+            increment_session_tokens_used(session_id, num_input_tokens + num_output_tokens)
 
         final_response = {
             **response_template,
