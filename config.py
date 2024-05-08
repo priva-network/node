@@ -35,17 +35,17 @@ class Config:
     }
 
     SUPPORTED_MODELS = [
-        # FIXME: Commented out mistral as it takes too long to download
-        #'mistralai/mistral-7b-v0.1',
+        'mistralai/mistral-7b-v0.1',
         'tinyllama/tinyllama-1.1b-chat-v1.0',
     ]
+
+    # Enable to run inference directly on your own machine (for testing mostly)
+    LOCAL_INFERENCE_ENABLED = False
 
     USD_COST_PER_1000_TOKENS = {
         'default': 0.01,
         'mistralai/mistral-7b-v0.1': 0.02,
     }
-
-    LOCAL_INFERENCE_ENABLED = True
 
     def __init__(self):
         """
