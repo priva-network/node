@@ -14,12 +14,6 @@ PRIVA_ENV=DEV python main.py <cmd>
 
 # Running as Docker Image
 
-Start the IPFS daemon as a background process:
-
-```
-ipfs daemon &
-```
-
 Build the Docker image:
 
 ```
@@ -30,4 +24,10 @@ Run the image in interactive mode using port 8000:
 
 ```
 docker run -it -p 8000:8000 -v /var/run/docker.sock:/var/run/docker.sock priva-node
+```
+
+Start the IPFS daemon as a background process:
+
+```
+ipfs daemon &
 ```
